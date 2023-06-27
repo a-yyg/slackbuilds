@@ -1,0 +1,108 @@
+diff -ruN ahoviewer-master/src/booru/browser.cc ahoviewer-master-diff/src/booru/browser.cc
+--- ahoviewer-master/src/booru/browser.cc	2022-08-27 22:53:01.000000000 +0900
++++ ahoviewer-master-diff/src/booru/browser.cc	2023-06-28 03:31:34.222979421 +0900
+@@ -156,6 +156,33 @@
+     m_TagEntry->grab_focus();
+ }
+ 
++void Browser::on_first_tab()
++{
++    if (m_Notebook->get_n_pages() > 0)
++        m_Notebook->set_current_page(0);
++}
++
++void Browser::on_prev_tab()
++{
++    int cur_page = m_Notebook->get_current_page();
++    if (cur_page >= 1)
++        m_Notebook->set_current_page(cur_page - 1);
++}
++
++void Browser::on_next_tab()
++{
++    int cur_page = m_Notebook->get_current_page();
++    int n_pages = m_Notebook->get_n_pages();
++    if (cur_page >= 0 && cur_page < n_pages - 1)
++        m_Notebook->set_current_page(cur_page + 1);
++}
++
++void Browser::on_last_tab()
++{
++    if (m_Notebook->get_n_pages() > 0)
++        m_Notebook->set_current_page(-1);
++}
++
+ void Browser::on_close_tab()
+ {
+     if (m_Notebook->get_n_pages() > 0)
+diff -ruN ahoviewer-master/src/booru/browser.h ahoviewer-master-diff/src/booru/browser.h
+--- ahoviewer-master/src/booru/browser.h	2022-08-27 22:53:01.000000000 +0900
++++ ahoviewer-master-diff/src/booru/browser.h	2023-06-28 03:23:49.611948230 +0900
+@@ -40,6 +40,10 @@
+ 
+             // Action callbacks {{{
+             void on_new_tab();
++            void on_first_tab();
++            void on_prev_tab();
++            void on_next_tab();
++            void on_last_tab();
+             void on_close_tab();
+             void on_save_image();
+             void on_save_image_as();
+diff -ruN ahoviewer-master/src/mainwindow.cc ahoviewer-master-diff/src/mainwindow.cc
+--- ahoviewer-master/src/mainwindow.cc	2022-08-27 22:53:01.000000000 +0900
++++ ahoviewer-master-diff/src/mainwindow.cc	2023-06-28 03:22:35.872943280 +0900
+@@ -626,6 +626,18 @@
+     m_ActionGroup->add(Gtk::Action::create("NewTab", Gtk::Stock::ADD, _("New Tab"), _("New Tab")),
+                        Gtk::AccelKey(Settings.get_keybinding("BooruBrowser", "NewTab")),
+                        sigc::mem_fun(m_BooruBrowser, &Booru::Browser::on_new_tab));
++    m_ActionGroup->add(Gtk::Action::create("FirstTab", Gtk::Stock::ADD, _("First Tab"), _("First Tab")),
++                       Gtk::AccelKey(Settings.get_keybinding("BooruBrowser", "FirstTab")),
++                       sigc::mem_fun(m_BooruBrowser, &Booru::Browser::on_first_tab));
++    m_ActionGroup->add(Gtk::Action::create("PrevTab", Gtk::Stock::ADD, _("Prev Tab"), _("Prev Tab")),
++                       Gtk::AccelKey(Settings.get_keybinding("BooruBrowser", "PrevTab")),
++                       sigc::mem_fun(m_BooruBrowser, &Booru::Browser::on_prev_tab));
++    m_ActionGroup->add(Gtk::Action::create("NextTab", Gtk::Stock::ADD, _("Next Tab"), _("Next Tab")),
++                       Gtk::AccelKey(Settings.get_keybinding("BooruBrowser", "NextTab")),
++                       sigc::mem_fun(m_BooruBrowser, &Booru::Browser::on_next_tab));
++    m_ActionGroup->add(Gtk::Action::create("LastTab", Gtk::Stock::ADD, _("Last Tab"), _("Last Tab")),
++                       Gtk::AccelKey(Settings.get_keybinding("BooruBrowser", "LastTab")),
++                       sigc::mem_fun(m_BooruBrowser, &Booru::Browser::on_last_tab));
+     m_ActionGroup->add(Gtk::Action::create("SaveImageAs",
+                                            Gtk::Stock::SAVE_AS,
+                                            _("Save Image as..."),
+diff -ruN ahoviewer-master/src/settings.cc ahoviewer-master-diff/src/settings.cc
+--- ahoviewer-master/src/settings.cc	2022-08-27 22:53:01.000000000 +0900
++++ ahoviewer-master-diff/src/settings.cc	2023-06-28 03:17:24.235922358 +0900
+@@ -109,6 +109,10 @@
+           { "BooruBrowser",
+             {
+                 { "NewTab", "<Primary>t" },
++                { "FirstTab", "<Primary>1" },
++                { "PrevTab", "<Primary>2" },
++                { "NextTab", "<Primary>3" },
++                { "LastTab", "<Primary>4" },
+                 { "SaveImage", "<Shift>s" },
+                 { "SaveImageAs", "<Primary>s" },
+                 { "SaveImages", "<Primary><Shift>s" },
+diff -ruN ahoviewer-master/src/ui/ahoviewer.ui ahoviewer-master-diff/src/ui/ahoviewer.ui
+--- ahoviewer-master/src/ui/ahoviewer.ui	2022-08-27 22:53:01.000000000 +0900
++++ ahoviewer-master-diff/src/ui/ahoviewer.ui	2023-06-28 03:38:59.102009288 +0900
+@@ -2132,6 +2132,10 @@
+       <accelerator action="ScrollLeft"/>
+       <accelerator action="ScrollRight"/>
+       <accelerator action="NewTab"/>
++      <accelerator action="FirstTab"/>
++      <accelerator action="PrevTab"/>
++      <accelerator action="NextTab"/>
++      <accelerator action="LastTab"/>
+       <accelerator action="SaveImage"/>
+       <accelerator action="SaveImageAs"/>
+       <accelerator action="SaveImages"/>
+@@ -2192,4 +2196,4 @@
+       </popup>
+     </ui>
+   </object>
+-</interface>
+\ No newline at end of file
++</interface>
